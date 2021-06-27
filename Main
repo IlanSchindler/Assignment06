@@ -1,0 +1,43 @@
+public class Producer { 
+    public ConcurrentQueue<int> queue;
+    static int seq; 
+    public Producer( ConcurrentQueue<int> queue) { this.queue = queue; }
+
+public void produce()
+{
+    Random rd = new Random();
+    while (seq++ < 10)
+    {  
+        int rand_num = rd.Next(0,200);
+        queue.Enqueue(rand_num);
+        Console.WriteLine("item: {0} value: {1}", seq, rand_num);                
+    }
+}
+}
+
+public class Consumer { 
+    int max;
+    int min;
+    public Consumer() {
+    }
+
+public void removeMax(Producer produce)
+{
+   var max = produce.queue.Max();
+   produce.queue = new ConcurrentQueue<int>(produce.queue.Where(x => x != max));
+    Console.WriteLine("New queue with max removed");
+    foreach(Object obj in produce.queue){
+        Console.WriteLine("value: {0}", obj);
+    }
+}
+    public void removeMin(Producer produce)
+{
+   var min = produce.queue.Min();
+   produce.queue = new ConcurrentQueue<int>(produce.queue.Where(x => x != min));
+    Console.WriteLine("New queue with min removed");
+    foreach(Object obj in produce.queue){
+        Console.WriteLine("value: {0}", obj);
+    }
+}
+}
+   
