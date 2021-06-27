@@ -1,71 +1,89 @@
-
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Main
-{
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            //Your code goes here
-            Producer cq = new Producer(new ConcurrentQueue<int>());
-            cq.produce();
-            Consumer hi = new Consumer();
-            hi.removeMax(cq);
-            hi.removeMin(cq);
-            foreach(Object obj in cq.queue){
-        Console.WriteLine("value: {0}", obj);
+namespace Group06_Assignment6 {
+  public class Program {
+    static void Main(string[] args) {
+      Console.WriteLine("Hello World!");
+      BufferReader.Buffer = new Queue<Item>();
+      BufferReader.Running = true;
+      BufferReader.BufferSize = 0;
+      Task.Run(() => new Producer("P1").Produce());
+      Task.Run(() => new Producer("P2").Produce());
+      Task.Run(() => new Consumer("C1").Consume());
+      Task.Run(() => new Consumer("C2").Consume());
+      Task.Run(() => new Consumer("C3").Consume());
+
+      BufferReader.BufferSize = 10;
+      //Task t1 = new Producer().Produce();
+      //Task t2 = new Producer().Produce();
+      //Task t3 = new Consumer().Consume();
+      //Task t4 = new Consumer().Consume();
+      //Task t5 = new Consumer().Consume();
+      //t1.Start();
+      //t2.Start();
+      //t3.Start();
+      //t4.Start();
+      //t5.Start();
+      Thread.Sleep(1000);
+      BufferReader.Running = false;
+      Console.WriteLine("Done");
+      
     }
+  }
+  public class Item {
+    public int ItemId { get; set; }
+
+    public static int RunningIds { get; set; }
+    public static Item GetNewItem() {
+      Console.WriteLine("Item " + RunningIds + " Created");
+      return new Item() { ItemId = RunningIds++ };
+    }
+  }
+  public class BufferReader {
+    public static Queue<Item> Buffer { get; set; }
+    public static bool Running { get; set; }
+
+    public static int BufferSize { get; set; }
+  }
+  public class Producer : BufferReader {
+    private DateTime created { get; set; }
+    private string Name { get; set; }
+    public Producer(string name) {
+      created = DateTime.Now;
+      Name = name;
+    }
+    public async Task Produce() {
+      while (Running) {
+        lock (Buffer) {
+          if (Buffer.Count < BufferSize) {
+            var newItem = Item.GetNewItem();
+            Console.WriteLine($"{Name}: Item {newItem.ItemId} Enqueued");
+            Buffer.Enqueue(newItem);
+          }
         }
+        Thread.Sleep(100);
+      }
     }
-}
-public class Producer { 
-    public ConcurrentQueue<int> queue;
-    static int seq; 
-    public Producer( ConcurrentQueue<int> queue) { this.queue = queue; }
+  }
 
-public void produce()
-{
-    Random rd = new Random();
-    while (seq++ < 10)
-    {  
-        int rand_num = rd.Next(0,200);
-        queue.Enqueue(rand_num);
-        Console.WriteLine("item: {0} value: {1}", seq, rand_num);                
+  public class Consumer : BufferReader {
+    private string Name { get; set; }
+    public Consumer(string name) {
+      Name = name;
     }
-}
-}
-
-public class Consumer { 
-    int max;
-    int min;
-    public Consumer() {
+    public async Task Consume() {
+      while (Running) {
+        lock (Buffer) {
+          if (Buffer.Count > 0) {
+            var item = Buffer.Dequeue();
+            Console.WriteLine($"{Name}: Item {item.ItemId} Dequeued");
+          }
+        }
+        Thread.Sleep(100);
+      }
     }
-
-public void removeMax(Producer produce)
-{
-   var max = produce.queue.Max();
-   produce.queue = new ConcurrentQueue<int>(produce.queue.Where(x => x != max));
-    Console.WriteLine("New queue with max removed: {0}",max);
-    foreach(Object obj in produce.queue){
-        Console.WriteLine("value: {0}", obj);
-    }
+  }
 }
-    public void removeMin(Producer produce)
-{
-   var min = produce.queue.Min();
-   produce.queue = new ConcurrentQueue<int>(produce.queue.Where(x => x != min));
-        Console.WriteLine("New queue with min removed: {0}",min);
-    foreach(Object obj in produce.queue){
-        Console.WriteLine("value: {0}", obj);
-    }
-}
-}
-   
-    
