@@ -1,3 +1,30 @@
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Main
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            //Your code goes here
+            Producer cq = new Producer(new ConcurrentQueue<int>());
+            cq.produce();
+            Consumer hi = new Consumer();
+            hi.removeMax(cq);
+            hi.removeMin(cq);
+            foreach(Object obj in cq.queue){
+        Console.WriteLine("value: {0}", obj);
+    }
+        }
+    }
+}
 public class Producer { 
     public ConcurrentQueue<int> queue;
     static int seq; 
@@ -25,7 +52,7 @@ public void removeMax(Producer produce)
 {
    var max = produce.queue.Max();
    produce.queue = new ConcurrentQueue<int>(produce.queue.Where(x => x != max));
-    Console.WriteLine("New queue with max removed");
+    Console.WriteLine("New queue with max removed: {0}",max);
     foreach(Object obj in produce.queue){
         Console.WriteLine("value: {0}", obj);
     }
@@ -34,10 +61,11 @@ public void removeMax(Producer produce)
 {
    var min = produce.queue.Min();
    produce.queue = new ConcurrentQueue<int>(produce.queue.Where(x => x != min));
-    Console.WriteLine("New queue with min removed");
+        Console.WriteLine("New queue with min removed: {0}",min);
     foreach(Object obj in produce.queue){
         Console.WriteLine("value: {0}", obj);
     }
 }
 }
    
+    
